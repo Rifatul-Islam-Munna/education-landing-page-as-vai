@@ -4,45 +4,14 @@ import QRCode from "qrcode";
 import { CirclePlay, Search } from "lucide-react";
 import { SiteFooter } from "../site-footer";
 import { SiteHeader } from "../site-header";
-import { getSiteContent, getStudentsPage, type Student } from "@/lib/site";
+import { StudentCard } from "./student-card";
+import { getSiteContent, getStudentsPage } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 function qrTarget(studentId: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
   return `${base}/students?studentId=${encodeURIComponent(studentId)}`;
-}
-
-async function StudentCard({ student }: { student: Student }) {
-  const qr = await QRCode.toDataURL(qrTarget(student.id), {
-    margin: 1,
-    width: 132,
-    color: {
-      dark: "#061338",
-      light: "#ffffff",
-    },
-  });
-
-  return (
-    <article className="border border-[#dce3ee] bg-white">
-      <div className="relative min-h-[255px] overflow-hidden">
-        <Image src={student.image} alt={student.name} fill sizes="(max-width: 768px) 100vw, 330px" className="object-cover" />
-      </div>
-      <div className="p-7 text-center">
-        <h2 className="text-xl font-black text-[#061338]">{student.name}</h2>
-        <p className="mt-2 text-sm font-black uppercase text-[#061338]">
-          Dep : <span className="text-[#667085]">{student.department}</span>
-        </p>
-        <div className="mx-auto mt-5 grid w-fit place-items-center rounded-md border border-[#dce3ee] p-2">
-          <Image src={qr} alt={`${student.name} QR code`} width={132} height={132} />
-        </div>
-      </div>
-      <div className="grid grid-cols-2 border-t border-[#dce3ee] px-5 py-5 text-xs font-black uppercase text-[#061338]">
-        <span>ID: {student.id}</span>
-        <span className="text-right">Class: {student.className}</span>
-      </div>
-    </article>
-  );
 }
 
 export default async function StudentsPage({
@@ -112,9 +81,16 @@ export default async function StudentsPage({
         <div>
           {result.students.length ? (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-              {result.students.map((student) => (
-                <StudentCard key={student.id} student={student} />
-              ))}
+              {await Promise.all(
+                result.students.map(async (student) => {
+                  const qr = await QRCode.toDataURL(qrTarget(student.id), {
+                    margin: 1,
+                    width: 220,
+                    color: { dark: "#061338", light: "#ffffff" },
+                  });
+                  return <StudentCard key={student.id} student={student} qrDataUrl={qr} />;
+                }),
+              )}
             </div>
           ) : (
             <div className="border border-[#dce3ee] p-12 text-center text-xl font-black text-[#061338]">
