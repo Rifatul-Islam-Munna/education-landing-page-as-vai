@@ -117,7 +117,7 @@ export async function updateSiteAction(
     href: text(formData, `footerServiceHref${index}`, service.href),
   }));
 
-  const studentCount = 12;
+  const studentCount = Number(formData.get("studentCount")) || 0;
   const students: Student[] = Array.from({ length: studentCount }, (_, index) => ({
     id: text(formData, `studentId${index}`, ""),
     name: text(formData, `studentName${index}`, ""),

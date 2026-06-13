@@ -16,7 +16,9 @@ export async function isAdmin() {
   const raw = store.get(cookieName)?.value;
   if (!raw) return false;
 
-  const [email, signature] = raw.split(".");
+  const sep = raw.lastIndexOf(".");
+  const email = raw.slice(0, sep);
+  const signature = raw.slice(sep + 1);
   if (!email || !signature) return false;
 
   const expected = sign(email);
