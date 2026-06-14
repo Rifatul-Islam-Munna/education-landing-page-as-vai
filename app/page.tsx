@@ -3,7 +3,6 @@ import {
   BadgeCheck,
   BookOpenCheck,
   BriefcaseBusiness,
-  CirclePlay,
   Code2,
   FlaskConical,
   School,
@@ -13,11 +12,18 @@ import { HomeSlider } from "./home-slider";
 import { SiteFooter } from "./site-footer";
 import { SiteHeader } from "./site-header";
 import { TestimonialSlider } from "./testimonial-slider";
+import { VideoModal } from "./students/video-modal";
+import { WelcomeSlider } from "./welcome-slider";
+import { getSeoMetadata } from "@/lib/seo";
 import { getSiteContent } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
 
 const deptIcons = [Sparkles, BookOpenCheck, Code2, School, BriefcaseBusiness, FlaskConical];
+
+export async function generateMetadata() {
+  return getSeoMetadata("home");
+}
 
 export default async function Home() {
   const content = await getSiteContent();
@@ -48,15 +54,10 @@ export default async function Home() {
       </section>
 
       <section className="welcome-section" id="about">
-        <div className="welcome-media">
-          <Image
-            src={content.welcome.image}
-            alt={content.welcome.title}
-            fill
-            loading="eager"
-            sizes="(max-width: 900px) 100vw, 46vw"
-          />
-        </div>
+        <WelcomeSlider
+          images={content.welcome.sliderImages.length ? content.welcome.sliderImages : [content.welcome.image]}
+          title={content.welcome.title}
+        />
         <div className="welcome-copy">
           <h2>{content.welcome.title}</h2>
           <p>{content.welcome.descriptionOne}</p>
@@ -85,7 +86,6 @@ export default async function Home() {
                 <Icon size={54} />
                 <h3>{department.title}</h3>
                 <p>{department.description}</p>
-                <a href="#">Read More</a>
               </article>
             );
           })}
@@ -95,10 +95,7 @@ export default async function Home() {
       <section className="university-section">
         <div className="university-inner">
           <div className="university-media">
-            <Image src={content.university.image} alt={content.university.title} fill sizes="(max-width: 900px) 100vw, 42vw" />
-            <button aria-label="Play video">
-              <CirclePlay size={62} />
-            </button>
+            <VideoModal title={content.university.title} url={content.university.videoUrl} />
           </div>
           <div className="university-copy">
             <h2>{content.university.title}</h2>

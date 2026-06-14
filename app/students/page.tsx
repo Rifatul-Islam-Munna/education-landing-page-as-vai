@@ -1,13 +1,19 @@
 import Image from "next/image";
 import Link from "next/link";
 import QRCode from "qrcode";
-import { CirclePlay, Search } from "lucide-react";
+import { Search } from "lucide-react";
 import { SiteFooter } from "../site-footer";
 import { SiteHeader } from "../site-header";
 import { StudentCard } from "./student-card";
+import { VideoModal } from "./video-modal";
+import { getSeoMetadata } from "@/lib/seo";
 import { getSiteContent, getStudentsPage } from "@/lib/site";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata() {
+  return getSeoMetadata("students");
+}
 
 function qrTarget(studentId: string) {
   const base = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
@@ -70,12 +76,7 @@ export default async function StudentsPage({
             </button>
           </form>
 
-          <div className="relative min-h-[210px] overflow-hidden bg-[#061338]">
-            <Image src={content.university.image} alt={content.university.title} fill sizes="310px" className="object-cover opacity-45" />
-            <button aria-label="Play video" className="absolute inset-0 m-auto grid h-20 w-20 place-items-center rounded-full bg-[#c81422] text-white">
-              <CirclePlay size={58} />
-            </button>
-          </div>
+          <VideoModal title={content.studentPage.searchTitle} url={content.studentPage.videoUrl} />
         </aside>
 
         <div>

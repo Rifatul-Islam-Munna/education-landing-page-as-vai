@@ -1,23 +1,37 @@
+"use client";
+
+import Image from "next/image";
 import Link from "next/link";
-import { FileText, MapPin, Menu, Phone, Search } from "lucide-react";
+import { FileText, MapPin, Menu, Phone, X } from "lucide-react";
+import { useState } from "react";
 import type { SiteContent } from "@/lib/site";
 
 const nav = [
   { label: "Home", href: "/" },
   { label: "About", href: "/about" },
-  { label: "Courses", href: "#" },
+  { label: "Courses", href: "/courses" },
   { label: "Students", href: "/students" },
-  { label: "Result", href: "#" },
-  { label: "Notice", href: "#" },
-  { label: "Contact", href: "#contact" },
+  { label: "Result", href: "/result" },
+  { label: "Notice", href: "/notice" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export function SiteHeader({ content }: { content: SiteContent }) {
+  const [open, setOpen] = useState(false);
+  const applyHref = content.applyHref || "/contact";
+  const isExternalApply = /^https?:\/\//.test(applyHref);
+
   return (
     <header className="site-header">
       <div className="header-top">
         <Link className="brand" href="/">
-          <span className="brand-mark">{content.logoMark}</span>
+          {content.logoImage && content.logoImage !== "#" ? (
+            <span className="brand-logo">
+              <Image src={content.logoImage} alt={content.brandName} fill sizes="64px" />
+            </span>
+          ) : (
+            <span className="brand-mark">{content.logoMark}</span>
+          )}
           <span>
             <strong>{content.brandName}</strong>
             <small>{content.brandTagline}</small>
@@ -39,28 +53,35 @@ export function SiteHeader({ content }: { content: SiteContent }) {
               <small>{content.phoneText}</small>
             </span>
           </div>
-          <a className="apply-btn" href="#contact">
+          <Link
+            className="apply-btn"
+            href={applyHref}
+            rel={isExternalApply ? "noreferrer" : undefined}
+            target={isExternalApply ? "_blank" : undefined}
+          >
             {content.applyText}
             <FileText size={18} />
-          </a>
+          </Link>
         </div>
       </div>
 
       <nav className="main-nav" aria-label="Primary navigation">
-        <div className="nav-links">
+        <button
+          aria-expanded={open}
+          aria-label="Toggle menu"
+          className="mobile-menu-btn"
+          onClick={() => setOpen((value) => !value)}
+          type="button"
+        >
+          {open ? <X size={24} /> : <Menu size={24} />}
+          <span>Menu</span>
+        </button>
+        <div className={open ? "nav-links open" : "nav-links"}>
           {nav.map((item) => (
-            <Link href={item.href} key={item.label}>
+            <Link href={item.href} key={item.label} onClick={() => setOpen(false)}>
               {item.label}
             </Link>
           ))}
-        </div>
-        <div className="nav-tools">
-          <button aria-label="Search">
-            <Search size={21} />
-          </button>
-          <button aria-label="Menu">
-            <Menu size={26} />
-          </button>
         </div>
       </nav>
     </header>

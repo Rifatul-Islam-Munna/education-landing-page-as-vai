@@ -1,5 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
 import type { SiteContent } from "@/lib/site";
+import { SocialLinks } from "./social-links";
 
 export function SiteFooter({ content }: { content: SiteContent }) {
   return (
@@ -7,9 +9,15 @@ export function SiteFooter({ content }: { content: SiteContent }) {
       <div className="mx-auto grid w-[min(1110px,calc(100%_-_48px))] grid-cols-1 gap-10 py-20 md:grid-cols-4">
         <div>
           <Link className="inline-flex items-center gap-3 no-underline" href="/">
-            <span className="grid h-11 w-12 place-items-center bg-gradient-to-br from-[#0b3a82] to-[#c81422] font-black text-white [clip-path:polygon(50%_0,100%_30%,88%_100%,12%_100%,0_30%)]">
-              {content.logoMark}
-            </span>
+            {content.logoImage && content.logoImage !== "#" ? (
+              <span className="relative block h-12 w-14 overflow-hidden rounded bg-white">
+                <Image src={content.logoImage} alt={content.brandName} fill sizes="56px" className="object-contain p-1" />
+              </span>
+            ) : (
+              <span className="grid h-11 w-12 place-items-center bg-gradient-to-br from-[#0b3a82] to-[#c81422] font-black text-white [clip-path:polygon(50%_0,100%_30%,88%_100%,12%_100%,0_30%)]">
+                {content.logoMark}
+              </span>
+            )}
             <span>
               <strong className="block text-2xl leading-none">{content.brandName}</strong>
               <small className="block font-bold uppercase text-[#dbe7ff]">{content.brandTagline}</small>
@@ -57,17 +65,7 @@ export function SiteFooter({ content }: { content: SiteContent }) {
           <p className="mt-7 whitespace-pre-line text-sm font-semibold leading-7 text-[#dbe7ff]">
             {content.footer.contactText}
           </p>
-          <div className="mt-7 flex gap-3">
-            <a className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white" href={content.footer.facebook} aria-label="Facebook">
-              f
-            </a>
-            <a className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white" href={content.footer.twitter} aria-label="Twitter">
-              x
-            </a>
-            <a className="grid h-10 w-10 place-items-center rounded-full bg-white/10 text-white" href={content.footer.linkedin} aria-label="LinkedIn">
-              in
-            </a>
-          </div>
+          <SocialLinks content={content} className="mt-7 flex flex-wrap gap-3" />
         </div>
       </div>
 
