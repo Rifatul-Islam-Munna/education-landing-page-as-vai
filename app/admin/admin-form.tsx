@@ -396,6 +396,20 @@ export function SiteEditor({
 
           <section>
             <h2>Testimonials</h2>
+            <div className="admin-card">
+              <h3>Chairman's Message</h3>
+              <div className="admin-grid">
+                <input name="chairmanEyebrow" defaultValue={content.chairmanMessage.eyebrow} placeholder="Eyebrow" />
+                <input name="chairmanTitle" defaultValue={content.chairmanMessage.title} placeholder="Title" />
+                <input name="chairmanName" defaultValue={content.chairmanMessage.name} placeholder="Name" />
+                <input name="chairmanRole" defaultValue={content.chairmanMessage.role} placeholder="Role" />
+              </div>
+              <textarea name="chairmanMessage" defaultValue={content.chairmanMessage.message} placeholder="Message" />
+              <label>
+                Chairman photo (recommended 700x900px)
+                <input name="chairmanImage" type="file" accept="image/*" />
+              </label>
+            </div>
             <div className="admin-grid">
               <input name="testimonialsEyebrow" defaultValue={content.testimonials.eyebrow} placeholder="Eyebrow" />
               <input name="testimonialsTitle" defaultValue={content.testimonials.title} placeholder="Title" />
@@ -1016,6 +1030,13 @@ export function SiteEditor({
       {tab === "seo" && (
         <section>
           <h2>SEO</h2>
+          <div className="admin-card">
+            <h3>Website Icon</h3>
+            <label>
+              Favicon / browser tab icon (ICO, PNG, or SVG)
+              <input name="siteIcon" type="file" accept="image/*,.ico,.svg" />
+            </label>
+          </div>
           <div className="admin-stack section-gap">
             {Object.entries(content.seo).map(([key, seo]) => (
               <div className="admin-card" key={key}>

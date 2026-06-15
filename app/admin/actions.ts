@@ -327,6 +327,7 @@ export async function updateSiteAction(
     brandTagline: text(formData, "brandTagline", current.brandTagline),
     logoMark: text(formData, "logoMark", current.logoMark),
     logoImage: await uploadImage(formData.get("logoImage"), current.logoImage),
+    siteIcon: await uploadImage(formData.get("siteIcon"), current.siteIcon),
     locationLabel: text(formData, "locationLabel", current.locationLabel),
     locationText: text(formData, "locationText", current.locationText),
     phoneLabel: text(formData, "phoneLabel", current.phoneLabel),
@@ -356,6 +357,14 @@ export async function updateSiteAction(
       descriptionThree: text(formData, "universityDescriptionThree", current.university.descriptionThree),
       videoUrl: text(formData, "universityVideoUrl", current.university.videoUrl),
       stats,
+    },
+    chairmanMessage: {
+      image: await uploadImage(formData.get("chairmanImage"), current.chairmanMessage.image),
+      eyebrow: text(formData, "chairmanEyebrow", current.chairmanMessage.eyebrow),
+      title: text(formData, "chairmanTitle", current.chairmanMessage.title),
+      message: text(formData, "chairmanMessage", current.chairmanMessage.message),
+      name: text(formData, "chairmanName", current.chairmanMessage.name),
+      role: text(formData, "chairmanRole", current.chairmanMessage.role),
     },
     testimonials: {
       eyebrow: text(formData, "testimonialsEyebrow", current.testimonials.eyebrow),

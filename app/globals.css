@@ -1216,6 +1216,83 @@ html {
   font-weight: 900;
 }
 
+.chairman-section {
+  padding: clamp(60px, 7vw, 98px) 0;
+  background: #f5f6f8;
+}
+
+.chairman-inner {
+  display: grid;
+  grid-template-columns: minmax(260px, 0.72fr) minmax(0, 1fr);
+  gap: clamp(24px, 4vw, 58px);
+  align-items: center;
+  width: min(1110px, calc(100% - 48px));
+  margin: 0 auto;
+}
+
+.chairman-media {
+  position: relative;
+  min-height: 470px;
+  overflow: hidden;
+  background: var(--deep);
+  box-shadow: 0 18px 44px rgba(6, 19, 56, 0.14);
+}
+
+.chairman-media img {
+  object-fit: cover;
+  object-position: center top;
+  transition: transform 0.6s ease;
+}
+
+.chairman-media:hover img {
+  transform: scale(1.05);
+}
+
+.chairman-copy {
+  padding: clamp(28px, 4vw, 46px);
+  background: #fff;
+  box-shadow: 0 18px 44px rgba(6, 19, 56, 0.08);
+}
+
+.chairman-copy > p:first-child {
+  margin: 0 0 10px;
+  color: var(--red);
+  font-size: 0.86rem;
+  font-weight: 900;
+  text-transform: uppercase;
+}
+
+.chairman-copy h2 {
+  color: var(--deep);
+  font-size: clamp(2rem, 3.6vw, 3.4rem);
+  line-height: 1.12;
+  font-weight: 900;
+}
+
+.chairman-copy p {
+  margin-top: 18px;
+  color: #5f6675;
+  font-size: 1.03rem;
+  line-height: 1.78;
+}
+
+.chairman-signature {
+  display: grid;
+  gap: 4px;
+  margin-top: 28px;
+}
+
+.chairman-signature strong {
+  color: var(--deep);
+  font-size: 1.18rem;
+  font-weight: 900;
+}
+
+.chairman-signature span {
+  color: var(--red);
+  font-weight: 900;
+}
+
 .testimonials-section {
   background: #fff;
 }
@@ -1510,6 +1587,7 @@ html {
 @media (max-width: 900px) {
   .welcome-section,
   .university-inner,
+  .chairman-inner,
   .about-story,
   .about-choose {
     grid-template-columns: 1fr;
@@ -1537,6 +1615,7 @@ html {
   .department-grid,
   .testimonial-grid,
   .university-inner,
+  .chairman-inner,
   .about-service-grid,
   .about-story,
   .about-choose,
@@ -1545,7 +1624,8 @@ html {
   }
 
   .welcome-media,
-  .university-media {
+  .university-media,
+  .chairman-media {
     min-height: 300px;
   }
 

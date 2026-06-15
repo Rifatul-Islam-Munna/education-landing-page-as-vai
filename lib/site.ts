@@ -34,6 +34,15 @@ export type Testimonial = {
   role: string;
 };
 
+export type ChairmanMessage = {
+  image: string;
+  eyebrow: string;
+  title: string;
+  message: string;
+  name: string;
+  role: string;
+};
+
 export type FooterLink = {
   label: string;
   href: string;
@@ -116,6 +125,7 @@ export type SiteContent = {
   brandTagline: string;
   logoMark: string;
   logoImage: string;
+  siteIcon: string;
   locationLabel: string;
   locationText: string;
   phoneLabel: string;
@@ -146,6 +156,7 @@ export type SiteContent = {
     videoUrl: string;
     stats: StatItem[];
   };
+  chairmanMessage: ChairmanMessage;
   testimonials: {
     eyebrow: string;
     title: string;
@@ -232,6 +243,7 @@ export const defaultContent: SiteContent = {
   brandTagline: "Manabi Academy",
   logoMark: "SA",
   logoImage: "#",
+  siteIcon: "/favicon.ico",
   locationLabel: "Location",
   locationText: "1010 New York, NY 10018 US",
   phoneLabel: "Phone",
@@ -351,6 +363,15 @@ export const defaultContent: SiteContent = {
       { value: "7", label: "Core Services" },
       { value: "24/7", label: "Student Support" },
     ],
+  },
+  chairmanMessage: {
+    image: "/seed/shinro-reference.jpeg",
+    eyebrow: "Chairman's Message",
+    title: "A Message From Our Chairman",
+    message:
+      "At Shinro Manabi Academy, we believe education creates opportunities and transforms lives.\n\nOur goal is not only to help students reach Japan but also to ensure they are fully prepared for academic success and personal growth. Through strong partnerships with Japanese educational institutions, we continue to support students throughout every stage of their journey.\n\nWe look forward to contributing to stronger educational ties between Bangladesh and Japan.",
+    name: "Hossain Sohag",
+    role: "Chairman",
   },
   testimonials: {
     eyebrow: "Testimonials",
@@ -786,6 +807,10 @@ function mergeContent(content?: Partial<SiteContent> | null): SiteContent {
         ...stat,
         ...(content.university?.stats?.[index] || {}),
       })),
+    },
+    chairmanMessage: {
+      ...defaultContent.chairmanMessage,
+      ...(content.chairmanMessage || {}),
     },
     testimonials: {
       ...defaultContent.testimonials,

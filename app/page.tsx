@@ -114,6 +114,30 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="chairman-section">
+        <div className="chairman-inner">
+          <div className="chairman-media">
+            <Image
+              src={content.chairmanMessage.image}
+              alt={content.chairmanMessage.name}
+              fill
+              sizes="(max-width: 900px) 100vw, 420px"
+            />
+          </div>
+          <div className="chairman-copy">
+            <p>{content.chairmanMessage.eyebrow}</p>
+            <h2>{content.chairmanMessage.title}</h2>
+            {content.chairmanMessage.message.split("\n").map((line, index) =>
+              line.trim() ? <p key={index}>{line}</p> : null,
+            )}
+            <div className="chairman-signature">
+              <strong>{content.chairmanMessage.name}</strong>
+              <span>{content.chairmanMessage.role}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="testimonials-section">
         <div className="section-title">
           <p>{content.testimonials.eyebrow}</p>
