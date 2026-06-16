@@ -62,6 +62,11 @@ function text(formData: FormData, name: string, fallback: string) {
   return typeof value === "string" && value.trim() ? value.trim() : fallback;
 }
 
+function seoText(formData: FormData, name: string, fallback: string) {
+  const value = formData.get(name);
+  return typeof value === "string" ? value.trim() : fallback;
+}
+
 export async function loginAction(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const email = String(formData.get("email") || "");
   const password = String(formData.get("password") || "");
@@ -308,14 +313,14 @@ export async function updateSiteAction(
     (acc, key) => {
       const currentSeo = current.seo[key];
       acc[key] = {
-        title: text(formData, `seoTitle_${key}`, currentSeo.title),
-        description: text(formData, `seoDescription_${key}`, currentSeo.description),
-        keywords: text(formData, `seoKeywords_${key}`, currentSeo.keywords),
-        ogTitle: text(formData, `seoOgTitle_${key}`, currentSeo.ogTitle),
-        ogDescription: text(formData, `seoOgDescription_${key}`, currentSeo.ogDescription),
-        ogImage: text(formData, `seoOgImage_${key}`, currentSeo.ogImage),
-        canonical: text(formData, `seoCanonical_${key}`, currentSeo.canonical),
-        robots: text(formData, `seoRobots_${key}`, currentSeo.robots),
+        title: seoText(formData, `seoTitle_${key}`, currentSeo.title),
+        description: seoText(formData, `seoDescription_${key}`, currentSeo.description),
+        keywords: seoText(formData, `seoKeywords_${key}`, currentSeo.keywords),
+        ogTitle: seoText(formData, `seoOgTitle_${key}`, currentSeo.ogTitle),
+        ogDescription: seoText(formData, `seoOgDescription_${key}`, currentSeo.ogDescription),
+        ogImage: seoText(formData, `seoOgImage_${key}`, currentSeo.ogImage),
+        canonical: seoText(formData, `seoCanonical_${key}`, currentSeo.canonical),
+        robots: seoText(formData, `seoRobots_${key}`, currentSeo.robots),
       };
       return acc;
     },
@@ -470,5 +475,7 @@ export async function updateSiteAction(
   revalidatePath("/result");
   revalidatePath("/notice");
   revalidatePath("/contact");
+  revalidatePath("/icon");
+  revalidatePath("/", "layout");
   return { ok: true, message: "Saved" };
 }

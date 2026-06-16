@@ -16,15 +16,16 @@ const merriweather = Merriweather({
 
 export async function generateMetadata(): Promise<Metadata> {
   const content = await getSiteContent();
+  const iconHref = `/icon?v=${encodeURIComponent(content.siteIcon)}`;
 
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
     title: "Shinro Manabi Academy",
     description: "Japanese language education and study pathway academy.",
     icons: {
-      icon: content.siteIcon,
-      shortcut: content.siteIcon,
-      apple: content.siteIcon,
+      icon: iconHref,
+      shortcut: iconHref,
+      apple: iconHref,
     },
   };
 }
