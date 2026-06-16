@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   reactCompiler:true,
   typescript:{
     ignoreBuildErrors:true
-  }
+  },
+  output:"standalone"
 };
 
 export default nextConfig;
