@@ -387,6 +387,12 @@ export async function updateSiteAction(
     {} as Record<SeoKey, SeoEntry>,
   );
 
+  await Promise.all(
+    seoKeys.map(async (key) => {
+      seo[key].ogImage = await uploadImage(formData.get(`seoOgImageFile_${key}`), seo[key].ogImage);
+    }),
+  );
+
   await saveSiteContent({
     brandName: text(formData, "brandName", current.brandName),
     brandTagline: text(formData, "brandTagline", current.brandTagline),

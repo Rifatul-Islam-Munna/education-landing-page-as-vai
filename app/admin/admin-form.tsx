@@ -1051,6 +1051,7 @@ export function SiteEditor({
                   <input name={`seoKeywords_${key}`} defaultValue={seo.keywords} placeholder="Keywords, comma separated" />
                   <input name={`seoOgTitle_${key}`} defaultValue={seo.ogTitle} placeholder="Open Graph title" />
                   <input name={`seoOgImage_${key}`} defaultValue={seo.ogImage} placeholder="Open Graph image URL (recommended 1200x630px)" />
+                  <input name={`seoOgImageFile_${key}`} type="file" accept="image/*" />
                   <input name={`seoCanonical_${key}`} defaultValue={seo.canonical} placeholder="Canonical URL/path" />
                   <input name={`seoRobots_${key}`} defaultValue={seo.robots} placeholder="Robots: index, follow" />
                 </div>
