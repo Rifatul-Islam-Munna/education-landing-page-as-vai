@@ -8,7 +8,7 @@ export function getPublicDir() {
 }
 
 export function getUploadsDir() {
-  return path.join(getPublicDir(), "uploads");
+  return path.resolve(process.env.UPLOADS_DIR || path.join(getPublicDir(), "uploads"));
 }
 
 export function resolvePublicFile(publicPath: string) {

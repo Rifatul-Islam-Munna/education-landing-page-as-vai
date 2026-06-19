@@ -31,6 +31,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=80
 ENV HOSTNAME="0.0.0.0"
+ENV UPLOADS_DIR=/app/public/uploads
 
 # Security: run as non-root user
 RUN addgroup --system --gid 1001 nodejs

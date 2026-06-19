@@ -33,6 +33,60 @@ type ActionState = {
 };
 
 const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".ico"]);
+const defaultImgbbUploadUrl = "https://api.imgbb.com/1/upload";
+
+function getImgbbImageUrl(data: unknown) {
+  if (!data || typeof data !== "object") return "";
+
+  const response = data as {
+    data?: {
+      display_url?: unknown;
+      url?: unknown;
+      image?: { url?: unknown };
+    };
+  };
+
+  const imageUrl =
+    response.data?.display_url || response.data?.url || response.data?.image?.url;
+
+  return typeof imageUrl === "string" && imageUrl ? imageUrl : "";
+}
+
+async function uploadImageToImgbb(file: File, bytes: Buffer) {
+  const key = process.env.IMGBB_API_KEY;
+  if (!key) return "";
+
+  const uploadUrl = process.env.IMGBB_UPLOAD_URL || defaultImgbbUploadUrl;
+  const formData = new FormData();
+  const blob = new Blob([new Uint8Array(bytes)], { type: file.type || "image/jpeg" });
+
+  formData.set("key", key);
+  formData.set("image", blob, file.name || "upload.jpg");
+
+  try {
+    const response = await fetch(uploadUrl, {
+      method: "POST",
+      body: formData,
+      signal: AbortSignal.timeout(15000),
+    });
+
+    if (!response.ok) return "";
+
+    return getImgbbImageUrl(await response.json());
+  } catch {
+    return "";
+  }
+}
+
+async function uploadImageToLocal(file: File, bytes: Buffer) {
+  const ext = (path.extname(file.name) || ".jpg").toLowerCase();
+  const name = `${Date.now()}-${randomUUID()}${ext}`;
+  const dir = getUploadsDir();
+
+  await mkdir(dir, { recursive: true });
+  await writeFile(path.join(dir, name), bytes);
+  return `/uploads/${name}`;
+}
 
 async function uploadImage(file: FormDataEntryValue | null, current: string) {
   if (!(file instanceof File) || file.size === 0) return current;
@@ -42,11 +96,9 @@ async function uploadImage(file: FormDataEntryValue | null, current: string) {
   if (!file.type.startsWith("image/") && !imageExtensions.has(ext)) return current;
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  const name = `${Date.now()}-${randomUUID()}${ext}`;
-  const dir = getUploadsDir();
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), bytes);
-  return `/uploads/${name}`;
+  const remoteUrl = await uploadImageToImgbb(file, bytes);
+
+  return remoteUrl || uploadImageToLocal(file, bytes);
 }
 
 async function uploadPdf(file: FormDataEntryValue | null, current: string) {
