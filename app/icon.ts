@@ -1,6 +1,7 @@
 import { readFile } from "fs/promises";
 import path from "path";
 import { getSiteContent } from "@/lib/site";
+import { getPublicDir, resolvePublicFile } from "@/lib/upload-paths";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,10 @@ const contentTypes: Record<string, string> = {
 export default async function Icon() {
   const content = await getSiteContent();
   const iconPath = content.siteIcon || "/favicon.ico";
-  const publicDir = path.join(process.cwd(), "public");
-  const filePath = path.resolve(publicDir, iconPath.replace(/^\/+/, ""));
+  const publicDir = getPublicDir();
+  const filePath = resolvePublicFile(iconPath);
 
-  if (!filePath.startsWith(`${publicDir}${path.sep}`)) {
+  if (!filePath) {
     return new Response(null, { status: 404 });
   }
 

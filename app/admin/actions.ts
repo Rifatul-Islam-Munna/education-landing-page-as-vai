@@ -6,6 +6,7 @@ import path from "path";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { clearAdminSession, createAdminSession, isAdmin } from "@/lib/auth";
+import { getUploadsDir, uploadLimitBytes, uploadLimitLabel } from "@/lib/upload-paths";
 import {
   deleteContactMessage,
   getSiteContent,
@@ -31,13 +32,18 @@ type ActionState = {
   ok: boolean;
 };
 
+const imageExtensions = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif", ".svg", ".ico"]);
+
 async function uploadImage(file: FormDataEntryValue | null, current: string) {
   if (!(file instanceof File) || file.size === 0) return current;
+  if (file.size > uploadLimitBytes) throw new Error(`Image upload limit is ${uploadLimitLabel}`);
+
+  const ext = (path.extname(file.name) || ".jpg").toLowerCase();
+  if (!file.type.startsWith("image/") && !imageExtensions.has(ext)) return current;
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  const ext = path.extname(file.name) || ".jpg";
   const name = `${Date.now()}-${randomUUID()}${ext}`;
-  const dir = path.join(process.cwd(), "public", "uploads");
+  const dir = getUploadsDir();
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, name), bytes);
   return `/uploads/${name}`;
@@ -45,13 +51,14 @@ async function uploadImage(file: FormDataEntryValue | null, current: string) {
 
 async function uploadPdf(file: FormDataEntryValue | null, current: string) {
   if (!(file instanceof File) || file.size === 0) return current;
+  if (file.size > uploadLimitBytes) throw new Error(`PDF upload limit is ${uploadLimitLabel}`);
 
   const ext = path.extname(file.name).toLowerCase();
   if (ext !== ".pdf" && file.type !== "application/pdf") return current;
 
   const bytes = Buffer.from(await file.arrayBuffer());
   const name = `${Date.now()}-${randomUUID()}.pdf`;
-  const dir = path.join(process.cwd(), "public", "uploads");
+  const dir = getUploadsDir();
   await mkdir(dir, { recursive: true });
   await writeFile(path.join(dir, name), bytes);
   return `/uploads/${name}`;
@@ -101,6 +108,7 @@ export async function updateSiteAction(
 ): Promise<ActionState> {
   if (!(await isAdmin())) return { ok: false, message: "Unauthorized" };
 
+  try {
   const current = await getSiteContent();
   const activeTab = String(formData.get("activeTab") || "");
 
@@ -478,4 +486,10 @@ export async function updateSiteAction(
   revalidatePath("/icon");
   revalidatePath("/", "layout");
   return { ok: true, message: "Saved" };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Upload failed",
+    };
+  }
 }

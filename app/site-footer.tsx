@@ -11,7 +11,7 @@ export function SiteFooter({ content }: { content: SiteContent }) {
           <Link className="inline-flex items-center gap-3 no-underline" href="/">
             {content.logoImage && content.logoImage !== "#" ? (
               <span className="relative block h-12 w-14 overflow-hidden rounded bg-white">
-                <Image src={content.logoImage} alt={content.brandName} fill sizes="56px" className="object-contain p-1" />
+                <Image src={content.logoImage} alt={content.brandName} fill sizes="56px" className="object-contain p-1" unoptimized />
               </span>
             ) : (
               <span className="grid h-11 w-12 place-items-center bg-gradient-to-br from-[#0b3a82] to-[#c81422] font-black text-white [clip-path:polygon(50%_0,100%_30%,88%_100%,12%_100%,0_30%)]">

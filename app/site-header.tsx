@@ -27,7 +27,7 @@ export function SiteHeader({ content }: { content: SiteContent }) {
         <Link className="brand" href="/">
           {content.logoImage && content.logoImage !== "#" ? (
             <span className="brand-logo">
-              <Image src={content.logoImage} alt={content.brandName} fill sizes="64px" />
+              <Image src={content.logoImage} alt={content.brandName} fill sizes="64px" unoptimized />
             </span>
           ) : (
             <span className="brand-mark">{content.logoMark}</span>

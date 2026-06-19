@@ -438,6 +438,11 @@ export function SiteEditor({
               <input name="logoMark" defaultValue={content.logoMark} placeholder="Logo mark" />
               <label>
                 Logo image (recommended 240x120px)
+                {content.logoImage && content.logoImage !== "#" ? (
+                  <span className="flex h-20 w-28 items-center justify-center rounded-md border border-gray-200 bg-white p-2">
+                    <img src={content.logoImage} alt={content.brandName} className="max-h-full max-w-full object-contain" />
+                  </span>
+                ) : null}
                 <input name="logoImage" type="file" accept="image/*" />
               </label>
               <input name="locationLabel" defaultValue={content.locationLabel} placeholder="Location label" />
