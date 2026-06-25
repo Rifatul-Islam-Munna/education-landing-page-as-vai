@@ -374,7 +374,7 @@ html {
 
 .feature-card {
   position: relative;
-  min-height: 350px;
+  min-height: 400px;
   overflow: hidden;
   border-right: 3px solid #fff;
   transition: transform 0.35s ease, box-shadow 0.4s ease;
@@ -392,13 +392,13 @@ html {
 
 .feature-overlay {
   position: absolute;
-  inset: 30% 0 0;
+  inset: 50% 0 0;
   background: linear-gradient(135deg, rgba(11, 58, 130, 0.95), rgba(6, 19, 56, 0.95));
   transition: inset 0.4s ease;
 }
 
 .feature-card:hover .feature-overlay {
-  inset: 24% 0 0;
+  inset: 50% 0 0;
 }
 
 .feature-card.red .feature-overlay {
@@ -411,7 +411,10 @@ html {
 
 .feature-copy {
   position: absolute;
-  inset: auto 34px 24px;
+  inset: 50% 34px 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   color: #fff;
 }
 
@@ -747,16 +750,17 @@ html {
   .feature-card {
     border-right: 0;
     border-bottom: 3px solid #fff;
-    min-height: 350px;
+    min-height: 400px;
   }
 
-  .feature-overlay {
-    inset: 0;
+  .feature-overlay,
+  .feature-card:hover .feature-overlay {
+    inset: 50% 0 0;
   }
 
   .feature-copy,
   .feature-card:hover .feature-copy {
-    inset: 34px 24px 24px;
+    inset: 50% 24px 0;
   }
 
   .feature-copy h2 {
@@ -863,16 +867,16 @@ html {
   }
 
   .feature-copy {
-    inset: 39% 20px 20px;
+    inset: 50% 20px 0;
   }
 
   .feature-card {
-    min-height: 340px;
+    min-height: 390px;
   }
 
   .feature-overlay,
   .feature-card:hover .feature-overlay {
-    inset: 0;
+    inset: 50% 0 0;
   }
 
   .feature-copy h2 {
