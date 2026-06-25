@@ -24,14 +24,15 @@ export function HomeSlider({ slides }: { slides: HeroSlide[] }) {
     <section className="hero-slider" aria-label="Homepage slider">
       {slides.map((slide, index) => (
         <article className={index === active ? "hero-slide active" : "hero-slide"} key={index}>
-          <Image
-            src={slide.image}
-            alt={slide.title}
-            fill
-            loading={index === 0 ? "eager" : "lazy"}
-            sizes="100vw"
-          />
-          <div className="hero-shade" />
+          <div className="hero-image">
+            <Image
+              src={slide.image}
+              alt={slide.title}
+              fill
+              loading={index === 0 ? "eager" : "lazy"}
+              sizes="100vw"
+            />
+          </div>
           <div className="hero-content">
             <p>{slide.eyebrow}</p>
             <h1>{slide.title}</h1>

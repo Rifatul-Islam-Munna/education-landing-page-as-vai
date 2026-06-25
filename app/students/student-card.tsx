@@ -24,8 +24,14 @@ export function StudentCard({
   return (
     <>
       <article className="border border-[#dce3ee] bg-white">
-        <div className="relative min-h-[255px] overflow-hidden">
-          <Image src={student.image} alt={student.name} fill sizes="(max-width: 768px) 100vw, 330px" className="object-cover" />
+        <div className="relative aspect-[7/10] overflow-hidden">
+          <Image
+            src={student.image}
+            alt={student.name}
+            fill
+            sizes="(max-width: 768px) calc(100vw - 48px), 360px"
+            className="object-cover"
+          />
         </div>
         <div className="p-7 text-center">
           <h2 className="text-xl font-black text-[#061338]">{student.name}</h2>

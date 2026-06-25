@@ -766,7 +766,7 @@ export function SiteEditor({
                       />
                     </div>
                     <label>
-                      Student image (recommended 600x600px)
+                      Student image (recommended 700x1000px)
                       <input
                         type="file"
                         accept="image/*"
