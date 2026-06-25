@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useActionState } from "react";
-import { Bell, BookOpen, FileCheck, Globe, Home, Info, Mail, Users, Plus, X } from "lucide-react";
-import { deleteContactMessageAction, loginAction, updateSiteAction } from "./actions";
+import Image from "next/image";
+import { useEffect, useState, useActionState, type ChangeEvent } from "react";
+import { useFormStatus } from "react-dom";
+import { AlertCircle, Bell, BookOpen, CheckCircle2, FileCheck, Globe, Home, Info, LoaderCircle, Mail, Users, Plus, X } from "lucide-react";
+import { deleteContactMessageAction, loginAction, updateSiteAction, uploadStudentImageAction } from "./actions";
 import type { ContactMessage, Course, Notice, ResultRecord, ResultRow, SiteContent, Student } from "@/lib/site";
 
 const initialState = { ok: false, message: "" };
@@ -21,10 +23,25 @@ const tabs = [
 
 type TabId = (typeof tabs)[number]["id"];
 
-function SubmitButton({ label }: { label: string }) {
+function SubmitButton({
+  label,
+  pendingLabel = "Saving...",
+  disabled = false,
+}: {
+  label: string;
+  pendingLabel?: string;
+  disabled?: boolean;
+}) {
+  const { pending } = useFormStatus();
+  const isDisabled = pending || disabled;
+
   return (
-    <button className="admin-button" type="submit">
-      {label}
+    <button className="admin-button" type="submit" disabled={isDisabled} aria-busy={pending}>
+      {pending ? <span className="admin-button-progress" /> : null}
+      <span className="admin-button-content">
+        {pending ? <LoaderCircle size={17} className="animate-spin" /> : null}
+        {pending ? pendingLabel : label}
+      </span>
     </button>
   );
 }
@@ -38,7 +55,7 @@ export function LoginForm() {
       <input name="email" type="email" placeholder="Email" required />
       <input name="password" type="password" placeholder="Password" required />
       {state.message ? <p className="admin-message">{state.message}</p> : null}
-      <SubmitButton label="Login" />
+      <SubmitButton label="Login" pendingLabel="Signing in..." />
     </form>
   );
 }
@@ -97,6 +114,8 @@ export function SiteEditor({
   students: Student[];
 }) {
   const [state, action] = useActionState(updateSiteAction, initialState);
+  const [toast, setToast] = useState<{ ok: boolean; message: string } | null>(null);
+  const [uploadingStudents, setUploadingStudents] = useState<Record<number, boolean>>({});
   const [tab, setTab] = useState<TabId>("home");
   const [studentPage, setStudentPage] = useState(0);
   const [contactListPage, setContactListPage] = useState(0);
@@ -131,6 +150,20 @@ export function SiteEditor({
   const [welcomeImages, setWelcomeImages] = useState<string[]>(
     content.welcome.sliderImages.length ? content.welcome.sliderImages : [content.welcome.image],
   );
+  const hasStudentUploads = Object.values(uploadingStudents).some(Boolean);
+
+  useEffect(() => {
+    if (!state.message) return;
+
+    setToast({ ok: state.ok, message: state.message });
+  }, [state]);
+
+  useEffect(() => {
+    if (!toast) return;
+
+    const timer = window.setTimeout(() => setToast(null), 4500);
+    return () => window.clearTimeout(timer);
+  }, [toast]);
 
   function addStudent() {
     setLocalStudents((prev) => [
@@ -152,6 +185,37 @@ export function SiteEditor({
     setLocalStudents((prev) =>
       prev.map((s, i) => (i === index ? { ...s, [field]: value } : s)),
     );
+  }
+
+  async function handleStudentImageChange(
+    index: number,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    setUploadingStudents((prev) => ({ ...prev, [index]: true }));
+    setToast(null);
+
+    try {
+      const formData = new FormData();
+      formData.set("image", file);
+      const result = await uploadStudentImageAction(formData);
+
+      if (result.ok && result.url) {
+        updateStudent(index, "image", result.url);
+      } else {
+        input.value = "";
+      }
+
+      setToast({ ok: result.ok, message: result.message });
+    } catch {
+      input.value = "";
+      setToast({ ok: false, message: "Image upload failed" });
+    } finally {
+      setUploadingStudents((prev) => ({ ...prev, [index]: false }));
+    }
   }
 
   function addCourse() {
@@ -248,11 +312,21 @@ export function SiteEditor({
           <p>Dashboard</p>
           <h1>Site Content</h1>
         </div>
-        <SubmitButton label="Save Changes" />
+        <SubmitButton label="Save Changes" disabled={hasStudentUploads} />
       </div>
 
-      {state.message ? (
-        <p className={state.ok ? "admin-message ok" : "admin-message"}>{state.message}</p>
+      {toast ? (
+        <div
+          className={`admin-toast ${toast.ok ? "ok" : "error"}`}
+          role="status"
+          aria-live="polite"
+        >
+          {toast.ok ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+          <span>{toast.message}</span>
+          <button type="button" onClick={() => setToast(null)} aria-label="Close notification">
+            <X size={17} />
+          </button>
+        </div>
       ) : null}
 
       <TabBar active={tab} onSwitch={setTab} />
@@ -693,8 +767,34 @@ export function SiteEditor({
                     </div>
                     <label>
                       Student image (recommended 600x600px)
-                      <input name={`studentImage${realIndex}`} type="file" accept="image/*" />
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={uploadingStudents[realIndex]}
+                        onChange={(event) => handleStudentImageChange(realIndex, event)}
+                      />
                     </label>
+                    {uploadingStudents[realIndex] ? (
+                      <div className="student-upload-status">
+                        <LoaderCircle size={17} className="animate-spin" />
+                        Uploading to ImageBB...
+                      </div>
+                    ) : student.image ? (
+                      <div className="student-image-result">
+                        <Image
+                          src={student.image}
+                          alt={`${student.name || "Student"} preview`}
+                          width={72}
+                          height={72}
+                          className="student-image-preview"
+                          unoptimized
+                        />
+                        <div>
+                          <span>ImageBB URL</span>
+                          <input value={student.image} readOnly onFocus={(event) => event.target.select()} />
+                        </div>
+                      </div>
+                    ) : null}
                   </div>
                 );
               })}

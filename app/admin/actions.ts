@@ -153,6 +153,29 @@ export async function logoutAction() {
   redirect("/admin");
 }
 
+export async function uploadStudentImageAction(
+  formData: FormData,
+): Promise<ActionState & { url?: string }> {
+  if (!(await isAdmin())) return { ok: false, message: "Unauthorized" };
+
+  try {
+    const file = formData.get("image");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, message: "Select an image" };
+    }
+
+    const url = await uploadImage(file, "");
+    if (!url) return { ok: false, message: "Image upload failed" };
+
+    return { ok: true, message: "Student image uploaded", url };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Image upload failed",
+    };
+  }
+}
+
 export async function deleteContactMessageAction(formData: FormData) {
   if (!(await isAdmin())) return;
 
