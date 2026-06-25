@@ -54,13 +54,13 @@ function getImgbbImageUrl(data: unknown) {
 
 async function uploadImageToImgbb(file: File, bytes: Buffer) {
   const key = process.env.IMGBB_API_KEY;
-  if (!key) return "";
+  if (!key) throw new Error("IMGBB_API_KEY missing");
 
-  const uploadUrl = process.env.IMGBB_UPLOAD_URL || defaultImgbbUploadUrl;
+  const uploadUrl = new URL(process.env.IMGBB_UPLOAD_URL || defaultImgbbUploadUrl);
+  uploadUrl.searchParams.set("key", key);
   const formData = new FormData();
   const blob = new Blob([new Uint8Array(bytes)], { type: file.type || "image/jpeg" });
 
-  formData.set("key", key);
   formData.set("image", blob, file.name || "upload.jpg");
 
   try {
@@ -70,22 +70,31 @@ async function uploadImageToImgbb(file: File, bytes: Buffer) {
       signal: AbortSignal.timeout(15000),
     });
 
-    if (!response.ok) return "";
+    const payload = await response.json().catch(() => null);
+    if (!response.ok) {
+      const error = payload as { error?: { message?: unknown } } | null;
+      const message =
+        typeof error?.error?.message === "string"
+          ? error.error.message
+          : `ImageBB upload failed (${response.status})`;
+      throw new Error(message);
+    }
 
-    return getImgbbImageUrl(await response.json());
-  } catch {
-    return "";
+    const imageUrl = getImgbbImageUrl(payload);
+    if (!imageUrl) throw new Error("ImageBB returned no image URL");
+
+    const parsedUrl = new URL(imageUrl);
+    if (parsedUrl.protocol !== "https:") {
+      throw new Error("ImageBB returned invalid image URL");
+    }
+
+    return parsedUrl.toString();
+  } catch (error) {
+    if (error instanceof Error && error.name === "TimeoutError") {
+      throw new Error("ImageBB upload timed out");
+    }
+    throw error;
   }
-}
-
-async function uploadImageToLocal(file: File, bytes: Buffer) {
-  const ext = (path.extname(file.name) || ".jpg").toLowerCase();
-  const name = `${Date.now()}-${randomUUID()}${ext}`;
-  const dir = getUploadsDir();
-
-  await mkdir(dir, { recursive: true });
-  await writeFile(path.join(dir, name), bytes);
-  return `/uploads/${name}`;
 }
 
 async function uploadImage(file: FormDataEntryValue | null, current: string) {
@@ -96,9 +105,7 @@ async function uploadImage(file: FormDataEntryValue | null, current: string) {
   if (!file.type.startsWith("image/") && !imageExtensions.has(ext)) return current;
 
   const bytes = Buffer.from(await file.arrayBuffer());
-  const remoteUrl = await uploadImageToImgbb(file, bytes);
-
-  return remoteUrl || uploadImageToLocal(file, bytes);
+  return uploadImageToImgbb(file, bytes);
 }
 
 async function uploadPdf(file: FormDataEntryValue | null, current: string) {
@@ -235,29 +242,30 @@ export async function updateSiteAction(
 
   const studentCount = Number(formData.get("studentCount")) || 0;
   const hasStudentInputs = activeTab === "students";
-  const students: Student[] = hasStudentInputs
-    ? Array.from({ length: studentCount }, (_, index) => ({
-        id: text(formData, `studentId${index}`, currentStudents[index]?.id || ""),
-        name: text(formData, `studentName${index}`, currentStudents[index]?.name || ""),
-        department: text(
-          formData,
-          `studentDepartment${index}`,
-          currentStudents[index]?.department || "",
-        ),
-        className: text(formData, `studentClass${index}`, currentStudents[index]?.className || ""),
-        image: "",
-      })).filter((student) => student.id && student.name)
+  const studentsWithImages: Student[] = hasStudentInputs
+    ? (
+        await Promise.all(
+          Array.from({ length: studentCount }, async (_, index) => ({
+            id: text(formData, `studentId${index}`, currentStudents[index]?.id || ""),
+            name: text(formData, `studentName${index}`, currentStudents[index]?.name || ""),
+            department: text(
+              formData,
+              `studentDepartment${index}`,
+              currentStudents[index]?.department || "",
+            ),
+            className: text(
+              formData,
+              `studentClass${index}`,
+              currentStudents[index]?.className || "",
+            ),
+            image: await uploadImage(
+              formData.get(`studentImage${index}`),
+              currentStudents[index]?.image || "/seed/shinro-reference.jpeg",
+            ),
+          })),
+        )
+      ).filter((student) => student.id && student.name)
     : currentStudents;
-
-  const studentsWithImages: Student[] = await Promise.all(
-    students.map(async (student, index) => ({
-      ...student,
-      image: await uploadImage(
-        formData.get(`studentImage${index}`),
-        currentStudents[index]?.image || "/seed/shinro-reference.jpeg",
-      ),
-    })),
-  );
 
   const currentCoursesRaw = formData.get("currentCourses");
   const currentCourses =

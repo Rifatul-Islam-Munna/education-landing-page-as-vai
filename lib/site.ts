@@ -998,10 +998,27 @@ export async function saveStudents(students: Student[]) {
   if (!db) throw new Error("MONGODB_URI missing");
 
   const collection = db.collection<Student>("students");
-  await collection.deleteMany({});
-  if (students.length) {
-    await collection.insertMany(students);
+  const ids = students.map((student) => student.id);
+  if (new Set(ids).size !== ids.length) {
+    throw new Error("Student IDs must be unique");
   }
+
+  if (!students.length) {
+    await collection.deleteMany({});
+    return;
+  }
+
+  await collection.bulkWrite(
+    students.map((student) => ({
+      replaceOne: {
+        filter: { id: student.id },
+        replacement: student,
+        upsert: true,
+      },
+    })),
+    { ordered: true },
+  );
+  await collection.deleteMany({ id: { $nin: ids } });
 }
 
 export async function getSiteContent(): Promise<SiteContent> {

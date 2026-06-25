@@ -649,55 +649,55 @@ export function SiteEditor({
               </button>
             </div>
             <div className="admin-stack section-gap">
-              {(() => {
-                const start = studentPage * perPage;
-                const paginated = localStudents.slice(start, start + perPage);
-                return paginated.map((student, i) => {
-                  const realIndex = start + i;
-                  return (
-                    <div className="admin-card relative" key={realIndex}>
-                      <div className="flex items-center justify-between">
-                        <h3 className="!mb-0">Student {realIndex + 1}</h3>
-                        {localStudents.length > 1 && (
-                          <button type="button" onClick={() => removeStudent(realIndex)} className="text-gray-400 hover:text-[#c81422] transition-colors">
-                            <X size={18} />
-                          </button>
-                        )}
-                      </div>
-                      <div className="admin-grid">
-                        <input
-                          name={`studentId${realIndex}`}
-                          value={student.id}
-                          onChange={(e) => updateStudent(realIndex, "id", e.target.value)}
-                          placeholder="Student ID"
-                        />
-                        <input
-                          name={`studentName${realIndex}`}
-                          value={student.name}
-                          onChange={(e) => updateStudent(realIndex, "name", e.target.value)}
-                          placeholder="Name"
-                        />
-                        <input
-                          name={`studentDepartment${realIndex}`}
-                          value={student.department}
-                          onChange={(e) => updateStudent(realIndex, "department", e.target.value)}
-                          placeholder="Department"
-                        />
-                        <input
-                          name={`studentClass${realIndex}`}
-                          value={student.className}
-                          onChange={(e) => updateStudent(realIndex, "className", e.target.value)}
-                          placeholder="Class"
-                        />
-                      </div>
-                      <label>
-                        Student image (recommended 600x600px)
-                        <input name={`studentImage${realIndex}`} type="file" accept="image/*" />
-                      </label>
+              {localStudents.map((student, realIndex) => {
+                const pageStart = studentPage * perPage;
+                const isVisible = realIndex >= pageStart && realIndex < pageStart + perPage;
+                return (
+                  <div
+                    className={`admin-card relative ${isVisible ? "" : "hidden"}`}
+                    key={realIndex}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="!mb-0">Student {realIndex + 1}</h3>
+                      {localStudents.length > 1 && (
+                        <button type="button" onClick={() => removeStudent(realIndex)} className="text-gray-400 hover:text-[#c81422] transition-colors">
+                          <X size={18} />
+                        </button>
+                      )}
                     </div>
-                  );
-                });
-              })()}
+                    <div className="admin-grid">
+                      <input
+                        name={`studentId${realIndex}`}
+                        value={student.id}
+                        onChange={(e) => updateStudent(realIndex, "id", e.target.value)}
+                        placeholder="Student ID"
+                      />
+                      <input
+                        name={`studentName${realIndex}`}
+                        value={student.name}
+                        onChange={(e) => updateStudent(realIndex, "name", e.target.value)}
+                        placeholder="Name"
+                      />
+                      <input
+                        name={`studentDepartment${realIndex}`}
+                        value={student.department}
+                        onChange={(e) => updateStudent(realIndex, "department", e.target.value)}
+                        placeholder="Department"
+                      />
+                      <input
+                        name={`studentClass${realIndex}`}
+                        value={student.className}
+                        onChange={(e) => updateStudent(realIndex, "className", e.target.value)}
+                        placeholder="Class"
+                      />
+                    </div>
+                    <label>
+                      Student image (recommended 600x600px)
+                      <input name={`studentImage${realIndex}`} type="file" accept="image/*" />
+                    </label>
+                  </div>
+                );
+              })}
             </div>
 
             {localStudents.length > perPage && (
