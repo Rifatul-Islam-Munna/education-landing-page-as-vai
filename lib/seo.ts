@@ -18,6 +18,10 @@ const routeText: Record<SeoKey, { title: string; description: string }> = {
     title: "Students",
     description: "Search student information.",
   },
+  staff: {
+    title: "Staff",
+    description: "Meet academy staff.",
+  },
   result: {
     title: "Result",
     description: "Search your result.",

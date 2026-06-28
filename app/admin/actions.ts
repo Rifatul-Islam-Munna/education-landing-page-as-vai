@@ -10,6 +10,7 @@ import { getUploadsDir, uploadLimitBytes, uploadLimitLabel } from "@/lib/upload-
 import {
   deleteContactMessage,
   getSiteContent,
+  saveStaffs,
   saveStudents,
   saveSiteContent,
   type Course,
@@ -21,6 +22,7 @@ import {
   type ResultRow,
   type SeoEntry,
   type SeoKey,
+  type Staff,
   type StatItem,
   type Student,
   type Testimonial,
@@ -176,6 +178,29 @@ export async function uploadStudentImageAction(
   }
 }
 
+export async function uploadStaffImageAction(
+  formData: FormData,
+): Promise<ActionState & { url?: string }> {
+  if (!(await isAdmin())) return { ok: false, message: "Unauthorized" };
+
+  try {
+    const file = formData.get("image");
+    if (!(file instanceof File) || file.size === 0) {
+      return { ok: false, message: "Select an image" };
+    }
+
+    const url = await uploadImage(file, "");
+    if (!url) return { ok: false, message: "Image upload failed" };
+
+    return { ok: true, message: "Staff image uploaded", url };
+  } catch (error) {
+    return {
+      ok: false,
+      message: error instanceof Error ? error.message : "Image upload failed",
+    };
+  }
+}
+
 export async function deleteContactMessageAction(formData: FormData) {
   if (!(await isAdmin())) return;
 
@@ -289,6 +314,29 @@ export async function updateSiteAction(
         )
       ).filter((student) => student.id && student.name)
     : currentStudents;
+
+  const currentStaffsRaw = formData.get("currentStaffs");
+  const currentStaffs =
+    typeof currentStaffsRaw === "string"
+      ? (JSON.parse(currentStaffsRaw) as Staff[])
+      : [];
+
+  const staffCount = Number(formData.get("staffCount")) || 0;
+  const hasStaffInputs = activeTab === "staff";
+  const staffsWithImages: Staff[] = hasStaffInputs
+    ? (
+        await Promise.all(
+          Array.from({ length: staffCount }, async (_, index) => ({
+            name: text(formData, `staffName${index}`, currentStaffs[index]?.name || ""),
+            role: text(formData, `staffRole${index}`, currentStaffs[index]?.role || ""),
+            image: await uploadImage(
+              formData.get(`staffImage${index}`),
+              currentStaffs[index]?.image || "/seed/shinro-reference.jpeg",
+            ),
+          })),
+        )
+      ).filter((staff) => staff.name && staff.role)
+    : currentStaffs;
 
   const currentCoursesRaw = formData.get("currentCourses");
   const currentCourses =
@@ -502,6 +550,22 @@ export async function updateSiteAction(
       ),
       videoUrl: text(formData, "studentVideoUrl", current.studentPage.videoUrl),
     },
+    staffPage: {
+      title: text(formData, "staffPageTitle", current.staffPage.title),
+      breadcrumb: text(formData, "staffPageBreadcrumb", current.staffPage.breadcrumb),
+      searchTitle: text(formData, "staffSearchTitle", current.staffPage.searchTitle),
+      searchPlaceholder: text(
+        formData,
+        "staffSearchPlaceholder",
+        current.staffPage.searchPlaceholder,
+      ),
+      emptyText: text(formData, "staffEmptyText", current.staffPage.emptyText),
+      heroImage: await uploadImage(
+        formData.get("staffHeroImage"),
+        current.staffPage.heroImage,
+      ),
+      videoUrl: text(formData, "staffVideoUrl", current.staffPage.videoUrl),
+    },
     aboutPage: {
       title: text(formData, "aboutPageTitle", current.aboutPage.title),
       breadcrumb: text(formData, "aboutPageBreadcrumb", current.aboutPage.breadcrumb),
@@ -564,10 +628,12 @@ export async function updateSiteAction(
   });
 
   await saveStudents(studentsWithImages);
+  await saveStaffs(staffsWithImages);
   revalidatePath("/");
   revalidatePath("/admin");
   revalidatePath("/about");
   revalidatePath("/students");
+  revalidatePath("/staff");
   revalidatePath("/courses");
   revalidatePath("/result");
   revalidatePath("/notice");

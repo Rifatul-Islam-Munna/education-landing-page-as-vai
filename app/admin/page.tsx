@@ -1,5 +1,5 @@
 import { isAdmin } from "@/lib/auth";
-import { getAllStudents, getContactMessages, getSiteContent } from "@/lib/site";
+import { getAllStaffs, getAllStudents, getContactMessages, getSiteContent } from "@/lib/site";
 import { logoutAction } from "./actions";
 import { LoginForm, SiteEditor } from "./admin-form";
 
@@ -16,9 +16,10 @@ export default async function AdminPage() {
     );
   }
 
-  const [content, students, contacts] = await Promise.all([
+  const [content, students, staffs, contacts] = await Promise.all([
     getSiteContent(),
     getAllStudents(),
+    getAllStaffs(),
     getContactMessages(),
   ]);
 
@@ -27,7 +28,7 @@ export default async function AdminPage() {
       <form action={logoutAction} className="logout-form">
         <button type="submit">Logout</button>
       </form>
-      <SiteEditor content={content} contacts={contacts} students={students} />
+      <SiteEditor content={content} contacts={contacts} staffs={staffs} students={students} />
     </main>
   );
 }

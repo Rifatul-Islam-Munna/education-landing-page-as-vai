@@ -4,8 +4,8 @@ import Image from "next/image";
 import { useEffect, useState, useActionState, type ChangeEvent } from "react";
 import { useFormStatus } from "react-dom";
 import { AlertCircle, Bell, BookOpen, CheckCircle2, FileCheck, Globe, Home, Info, LoaderCircle, Mail, Users, Plus, X } from "lucide-react";
-import { deleteContactMessageAction, loginAction, updateSiteAction, uploadStudentImageAction } from "./actions";
-import type { ContactMessage, Course, Notice, ResultRecord, ResultRow, SiteContent, Student } from "@/lib/site";
+import { deleteContactMessageAction, loginAction, updateSiteAction, uploadStaffImageAction, uploadStudentImageAction } from "./actions";
+import type { ContactMessage, Course, Notice, ResultRecord, ResultRow, SiteContent, Staff, Student } from "@/lib/site";
 
 const initialState = { ok: false, message: "" };
 
@@ -14,6 +14,7 @@ const tabs = [
   { id: "common", label: "Common" },
   { id: "about", label: "About" },
   { id: "students", label: "Students" },
+  { id: "staff", label: "Staff" },
   { id: "courses", label: "Courses" },
   { id: "result", label: "Result" },
   { id: "notice", label: "Notice" },
@@ -65,6 +66,7 @@ const tabIcons: Record<TabId, React.ReactNode> = {
   common: <Info size={18} />,
   about: <Info size={18} />,
   students: <Users size={18} />,
+  staff: <Users size={18} />,
   courses: <BookOpen size={18} />,
   result: <FileCheck size={18} />,
   notice: <Bell size={18} />,
@@ -77,6 +79,7 @@ const seoLabels: Record<string, string> = {
   about: "About",
   courses: "Courses",
   students: "Students",
+  staff: "Staff",
   result: "Result",
   notice: "Notice",
   contact: "Contact",
@@ -107,22 +110,29 @@ function TabBar({ active, onSwitch }: { active: TabId; onSwitch: (id: TabId) => 
 export function SiteEditor({
   contacts,
   content,
+  staffs,
   students,
 }: {
   contacts: ContactMessage[];
   content: SiteContent;
+  staffs: Staff[];
   students: Student[];
 }) {
   const [state, action] = useActionState(updateSiteAction, initialState);
   const [toast, setToast] = useState<{ ok: boolean; message: string } | null>(null);
   const [uploadingStudents, setUploadingStudents] = useState<Record<number, boolean>>({});
+  const [uploadingStaffs, setUploadingStaffs] = useState<Record<number, boolean>>({});
   const [tab, setTab] = useState<TabId>("home");
   const [studentPage, setStudentPage] = useState(0);
+  const [staffPage, setStaffPage] = useState(0);
   const [contactListPage, setContactListPage] = useState(0);
   const [noticeListPage, setNoticeListPage] = useState(0);
   const perPage = 5;
   const [localStudents, setLocalStudents] = useState<Student[]>(
     students.length > 0 ? students : [{ id: "", name: "", department: "", className: "", image: "" }],
+  );
+  const [localStaffs, setLocalStaffs] = useState<Staff[]>(
+    staffs.length > 0 ? staffs : [{ name: "", role: "", image: "" }],
   );
   const [localCourses, setLocalCourses] = useState<Course[]>(
     content.coursePage.courses.length
@@ -151,6 +161,7 @@ export function SiteEditor({
     content.welcome.sliderImages.length ? content.welcome.sliderImages : [content.welcome.image],
   );
   const hasStudentUploads = Object.values(uploadingStudents).some(Boolean);
+  const hasStaffUploads = Object.values(uploadingStaffs).some(Boolean);
 
   useEffect(() => {
     if (!state.message) return;
@@ -215,6 +226,56 @@ export function SiteEditor({
       setToast({ ok: false, message: "Image upload failed" });
     } finally {
       setUploadingStudents((prev) => ({ ...prev, [index]: false }));
+    }
+  }
+
+  function addStaff() {
+    setLocalStaffs((prev) => [...prev, { name: "", role: "", image: "" }]);
+  }
+
+  function removeStaff(index: number) {
+    setLocalStaffs((prev) => {
+      const next = prev.filter((_, i) => i !== index);
+      const maxPage = Math.ceil(next.length / perPage) - 1;
+      if (staffPage > maxPage) setStaffPage(Math.max(maxPage, 0));
+      return next;
+    });
+  }
+
+  function updateStaff(index: number, field: keyof Staff, value: string) {
+    setLocalStaffs((prev) =>
+      prev.map((staff, i) => (i === index ? { ...staff, [field]: value } : staff)),
+    );
+  }
+
+  async function handleStaffImageChange(
+    index: number,
+    event: ChangeEvent<HTMLInputElement>,
+  ) {
+    const input = event.currentTarget;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    setUploadingStaffs((prev) => ({ ...prev, [index]: true }));
+    setToast(null);
+
+    try {
+      const formData = new FormData();
+      formData.set("image", file);
+      const result = await uploadStaffImageAction(formData);
+
+      if (result.ok && result.url) {
+        updateStaff(index, "image", result.url);
+      } else {
+        input.value = "";
+      }
+
+      setToast({ ok: result.ok, message: result.message });
+    } catch {
+      input.value = "";
+      setToast({ ok: false, message: "Image upload failed" });
+    } finally {
+      setUploadingStaffs((prev) => ({ ...prev, [index]: false }));
     }
   }
 
@@ -312,7 +373,7 @@ export function SiteEditor({
           <p>Dashboard</p>
           <h1>Site Content</h1>
         </div>
-        <SubmitButton label="Save Changes" disabled={hasStudentUploads} />
+        <SubmitButton label="Save Changes" disabled={hasStudentUploads || hasStaffUploads} />
       </div>
 
       {toast ? (
@@ -333,6 +394,8 @@ export function SiteEditor({
       <input name="activeTab" type="hidden" value={tab} />
       <input name="currentStudents" type="hidden" value={JSON.stringify(localStudents)} />
       <input name="studentCount" type="hidden" value={String(localStudents.length)} />
+      <input name="currentStaffs" type="hidden" value={JSON.stringify(localStaffs)} />
+      <input name="staffCount" type="hidden" value={String(localStaffs.length)} />
       <input name="currentCourses" type="hidden" value={JSON.stringify(localCourses)} />
       <input name="courseCount" type="hidden" value={String(localCourses.length)} />
       <input name="currentNotices" type="hidden" value={JSON.stringify(localNotices)} />
@@ -828,6 +891,142 @@ export function SiteEditor({
                   type="button"
                   disabled={studentPage >= Math.ceil(localStudents.length / perPage) - 1}
                   onClick={() => setStudentPage((p) => p + 1)}
+                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-bold text-gray-600 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </section>
+        </>
+      )}
+
+      {tab === "staff" && (
+        <>
+          <section>
+            <h2>Staff Page</h2>
+            <div className="admin-card">
+              <div className="admin-grid">
+                <input name="staffPageTitle" defaultValue={content.staffPage.title} placeholder="Page title" />
+                <input name="staffPageBreadcrumb" defaultValue={content.staffPage.breadcrumb} placeholder="Breadcrumb" />
+                <input name="staffSearchTitle" defaultValue={content.staffPage.searchTitle} placeholder="Search box title" />
+                <input
+                  name="staffSearchPlaceholder"
+                  defaultValue={content.staffPage.searchPlaceholder}
+                  placeholder="Search input placeholder"
+                />
+              </div>
+              <textarea name="staffEmptyText" defaultValue={content.staffPage.emptyText} placeholder="Empty text" />
+              <input name="staffVideoUrl" defaultValue={content.staffPage.videoUrl} placeholder="YouTube video URL" />
+              <label>
+                Page hero image (recommended 1920x520px)
+                <input name="staffHeroImage" type="file" accept="image/*" />
+              </label>
+            </div>
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="!mb-0">Staff</h2>
+              <button type="button" onClick={addStaff} className="flex items-center gap-1.5 rounded-lg bg-[#c81422] px-3 py-2 text-xs font-bold text-white hover:bg-[#a0101b] transition-colors">
+                <Plus size={16} />
+                Add Staff
+              </button>
+            </div>
+            <div className="admin-stack section-gap">
+              {localStaffs.map((staff, realIndex) => {
+                const pageStart = staffPage * perPage;
+                const isVisible = realIndex >= pageStart && realIndex < pageStart + perPage;
+                return (
+                  <div
+                    className={`admin-card relative ${isVisible ? "" : "hidden"}`}
+                    key={realIndex}
+                  >
+                    <div className="flex items-center justify-between">
+                      <h3 className="!mb-0">Staff {realIndex + 1}</h3>
+                      {localStaffs.length > 1 && (
+                        <button type="button" onClick={() => removeStaff(realIndex)} className="text-gray-400 hover:text-[#c81422] transition-colors">
+                          <X size={18} />
+                        </button>
+                      )}
+                    </div>
+                    <div className="admin-grid">
+                      <input
+                        name={`staffName${realIndex}`}
+                        value={staff.name}
+                        onChange={(e) => updateStaff(realIndex, "name", e.target.value)}
+                        placeholder="Name"
+                      />
+                      <input
+                        name={`staffRole${realIndex}`}
+                        value={staff.role}
+                        onChange={(e) => updateStaff(realIndex, "role", e.target.value)}
+                        placeholder="Role"
+                      />
+                    </div>
+                    <label>
+                      Staff image (recommended 700x1000px)
+                      <input
+                        type="file"
+                        accept="image/*"
+                        disabled={uploadingStaffs[realIndex]}
+                        onChange={(event) => handleStaffImageChange(realIndex, event)}
+                      />
+                    </label>
+                    {uploadingStaffs[realIndex] ? (
+                      <div className="student-upload-status">
+                        <LoaderCircle size={17} className="animate-spin" />
+                        Uploading to ImageBB...
+                      </div>
+                    ) : staff.image ? (
+                      <div className="student-image-result">
+                        <Image
+                          src={staff.image}
+                          alt={`${staff.name || "Staff"} preview`}
+                          width={72}
+                          height={72}
+                          className="student-image-preview"
+                          unoptimized
+                        />
+                        <div>
+                          <span>ImageBB URL</span>
+                          <input value={staff.image} readOnly onFocus={(event) => event.target.select()} />
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                );
+              })}
+            </div>
+
+            {localStaffs.length > perPage && (
+              <div className="mt-4 flex items-center justify-center gap-2">
+                <button
+                  type="button"
+                  disabled={staffPage === 0}
+                  onClick={() => setStaffPage((p) => Math.max(0, p - 1))}
+                  className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-bold text-gray-600 disabled:opacity-40 hover:bg-gray-50 transition-colors"
+                >
+                  Prev
+                </button>
+                {Array.from({ length: Math.ceil(localStaffs.length / perPage) }, (_, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => setStaffPage(i)}
+                    className={`rounded-lg px-3 py-1.5 text-sm font-bold transition-colors ${
+                      i === staffPage
+                        ? "bg-[#c81422] text-white"
+                        : "border border-gray-300 text-gray-600 hover:bg-gray-50"
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  disabled={staffPage >= Math.ceil(localStaffs.length / perPage) - 1}
+                  onClick={() => setStaffPage((p) => p + 1)}
                   className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm font-bold text-gray-600 disabled:opacity-40 hover:bg-gray-50 transition-colors"
                 >
                   Next

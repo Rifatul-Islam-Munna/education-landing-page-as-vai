@@ -56,6 +56,12 @@ export type Student = {
   image: string;
 };
 
+export type Staff = {
+  name: string;
+  role: string;
+  image: string;
+};
+
 export type Course = {
   image: string;
   price: string;
@@ -106,6 +112,7 @@ export type SeoKey =
   | "about"
   | "courses"
   | "students"
+  | "staff"
   | "result"
   | "notice"
   | "contact";
@@ -176,6 +183,15 @@ export type SiteContent = {
     services: FooterLink[];
   };
   studentPage: {
+    title: string;
+    breadcrumb: string;
+    searchTitle: string;
+    searchPlaceholder: string;
+    emptyText: string;
+    heroImage: string;
+    videoUrl: string;
+  };
+  staffPage: {
     title: string;
     breadcrumb: string;
     searchTitle: string;
@@ -434,6 +450,15 @@ export const defaultContent: SiteContent = {
     heroImage: "/seed/shinro-reference.jpeg",
     videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   },
+  staffPage: {
+    title: "Staff List",
+    breadcrumb: "Home - Staff",
+    searchTitle: "Search Staff",
+    searchPlaceholder: "Name or Role",
+    emptyText: "No staff found.",
+    heroImage: "/seed/shinro-reference.jpeg",
+    videoUrl: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+  },
   aboutPage: {
     title: "About Us",
     breadcrumb: "Home - About Us",
@@ -646,6 +671,16 @@ export const defaultContent: SiteContent = {
       canonical: "/students",
       robots: "index, follow",
     },
+    staff: {
+      title: "Staff | Shinro Manabi Academy",
+      description: "Meet Shinro Manabi Academy staff members.",
+      keywords: "Shinro staff, academy team, instructors",
+      ogTitle: "Staff",
+      ogDescription: "Academy staff and team members.",
+      ogImage: "/seed/shinro-reference.jpeg",
+      canonical: "/staff",
+      robots: "index, follow",
+    },
     result: {
       title: "Result | Shinro Manabi Academy",
       description: "Search student course results and academic progress.",
@@ -767,6 +802,24 @@ export const defaultStudents: Student[] = [
   },
 ];
 
+export const defaultStaffs: Staff[] = [
+  {
+    name: "Hossain Sohag",
+    role: "Chairman",
+    image: "/seed/shinro-reference.jpeg",
+  },
+  {
+    name: "Sarah Khan",
+    role: "Japanese Language Instructor",
+    image: "/seed/shinro-reference.jpeg",
+  },
+  {
+    name: "Tanvir Ahmed",
+    role: "Student Counselor",
+    image: "/seed/shinro-reference.jpeg",
+  },
+];
+
 function mergeContent(content?: Partial<SiteContent> | null): SiteContent {
   if (!content) return defaultContent;
 
@@ -836,6 +889,10 @@ function mergeContent(content?: Partial<SiteContent> | null): SiteContent {
       ...defaultContent.studentPage,
       ...(content.studentPage || {}),
     },
+    staffPage: {
+      ...defaultContent.staffPage,
+      ...(content.staffPage || {}),
+    },
     aboutPage: {
       ...defaultContent.aboutPage,
       ...(content.aboutPage || {}),
@@ -900,6 +957,25 @@ export async function getAllStudents(): Promise<Student[]> {
         image: student.image,
       }))
     : defaultStudents;
+}
+
+export async function getAllStaffs(): Promise<Staff[]> {
+  const db = await getDb();
+  if (!db) return defaultStaffs;
+
+  const staffs = await db
+    .collection<Staff>("staff")
+    .find({})
+    .sort({ name: 1 })
+    .toArray();
+
+  return staffs.length
+    ? staffs.map((staff) => ({
+        name: staff.name,
+        role: staff.role,
+        image: staff.image,
+      }))
+    : defaultStaffs;
 }
 
 export function getResultDepartments(content: SiteContent) {
@@ -993,6 +1069,36 @@ export async function getStudentsPage({
   };
 }
 
+export async function getStaffPage({
+  page,
+  query,
+  pageSize = 6,
+}: {
+  page: number;
+  query?: string;
+  pageSize?: number;
+}) {
+  const all = await getAllStaffs();
+  const normalized = query?.trim().toLowerCase();
+  const filtered = normalized
+    ? all.filter(
+        (staff) =>
+          staff.name.toLowerCase().includes(normalized) ||
+          staff.role.toLowerCase().includes(normalized),
+      )
+    : all;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(Math.max(page, 1), totalPages);
+  const start = (safePage - 1) * pageSize;
+
+  return {
+    staff: filtered.slice(start, start + pageSize),
+    totalPages,
+    page: safePage,
+    total: filtered.length,
+  };
+}
+
 export async function saveStudents(students: Student[]) {
   const db = await getDb();
   if (!db) throw new Error("MONGODB_URI missing");
@@ -1019,6 +1125,15 @@ export async function saveStudents(students: Student[]) {
     { ordered: true },
   );
   await collection.deleteMany({ id: { $nin: ids } });
+}
+
+export async function saveStaffs(staffs: Staff[]) {
+  const db = await getDb();
+  if (!db) throw new Error("MONGODB_URI missing");
+
+  const collection = db.collection<Staff>("staff");
+  await collection.deleteMany({});
+  if (staffs.length) await collection.insertMany(staffs);
 }
 
 export async function getSiteContent(): Promise<SiteContent> {
